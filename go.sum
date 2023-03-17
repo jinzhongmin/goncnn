@@ -1,0 +1,10 @@
+github.com/jinzhongmin/dlfcn v0.0.0-20230310052724-9fb7e3fc5af5 h1:jzI/8zrQA3Dkm8cGOdOK9CxShzttRpal7Nmyi11i4Mw=
+github.com/jinzhongmin/dlfcn v0.0.0-20230310052724-9fb7e3fc5af5/go.mod h1:GT+ScvzYpzyBTkFoIBM9yXJJpoJSLvzaZk31/q0fuyc=
+github.com/jinzhongmin/goffi v0.0.0-20230315063028-0a5689597283 h1:Cr3CLF2cgujHpWmLBYM+b4RK8AtrldIHhyK2b0NVBvU=
+github.com/jinzhongmin/goffi v0.0.0-20230315063028-0a5689597283/go.mod h1:32mvu39m3gFg5O87ddVN2rC5Ti9BUOeaquUgFB6gcxE=
+github.com/jinzhongmin/mem v0.0.0-20230227042413-8fb11fa6bf3f h1:04PnNA+yHh6q03umD9jiDi1cNx7npC3bp6qk7QCZU2M=
+github.com/jinzhongmin/mem v0.0.0-20230227042413-8fb11fa6bf3f/go.mod h1:nyYIFZKZz2FoAXqZSg0gbAQMbnoPe95zU1RyDns9//g=
+github.com/jinzhongmin/usf v0.0.0-20230315053005-5f4848b1d802 h1:4h92UzeFJdwiIGt3vzQKn/OA3uba76pPl+0pOMrpKLU=
+github.com/jinzhongmin/usf v0.0.0-20230315053005-5f4848b1d802/go.mod h1:bbc9ZPecQ4VigHV681E/4i8kOuuqGSgMevKqA7D1EYc=
+golang.org/x/text v0.8.0 h1:57P1ETyNKtuIjB4SRd15iJxuhj8Gc416Y78H3qgMh68=
+golang.org/x/text v0.8.0/go.mod h1:e1OnstbJyHTd6l/uOt8jFFHp6TRDWZR/bV3emEE/zU8=
