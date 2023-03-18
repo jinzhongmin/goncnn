@@ -57,7 +57,7 @@ func call(fn string, inTyp ffi.Type, outTyp []ffi.Type, args []interface{}) unsa
 
 func Version() string {
 	v := call("ncnn_version", ffi.Pointer, []ffi.Type{}, []interface{}{})
-	return C.GoString((*C.char)(usf.Pop(v)))
+	return gostr(usf.Pop(v))
 }
 
 type Allocator struct{ c unsafe.Pointer }
@@ -416,16 +416,15 @@ func (mat *Mat) SubstractMeanNormalize(mean, norm []float32) {
 		[]ffi.Type{ffi.Pointer, ffi.Pointer, ffi.Pointer},
 		[]interface{}{&mat.c, &m, &n})
 }
+func (mat *Mat) ConvertPacking(elempack int32, opt *Option) *Mat {
+	m := usf.Malloc(1, 8)
+	defer usf.Free(m)
+	call("ncnn_convert_packing", ffi.Void,
+		[]ffi.Type{ffi.Pointer, ffi.Pointer, ffi.Int32, ffi.Pointer},
+		[]interface{}{&mat.c, &m, &elempack, &opt.c})
 
-// func (mat *Mat) ConvertPacking(elempack int32, opt *Option) *Mat {
-// 	m := new(unsafe.Pointer)
-// 	*m = nil
-// 	call("ncnn_convert_packing", ffi.Void,
-// 		[]ffi.Type{ffi.Pointer, ffi.Pointer, ffi.Int32, ffi.Pointer},
-// 		[]interface{}{mat.c, m, elempack, opt.c})
-
-// 	return &Mat{c: *m}
-// }
+	return &Mat{c: usf.Pop(m)}
+}
 
 func (mat *Mat) Flatten(opt *Option) *Mat {
 	m := usf.Malloc(1, 8)
@@ -509,13 +508,13 @@ func (pd *Paramdict) SetArray(id int32, m *Mat) {
 		[]interface{}{&pd.c, &id, &m})
 }
 
-type Datareader struct{ c unsafe.Pointer }
+type DataReader struct{ c unsafe.Pointer }
 
-func CreateDatareader() *Datareader {
+func CreateDataReader() *DataReader {
 	d := call("ncnn_datareader_create", ffi.Pointer, []ffi.Type{}, []interface{}{})
-	return &Datareader{c: usf.Pop(d)}
+	return &DataReader{c: usf.Pop(d)}
 }
-func CreateDatareaderFromMemory(mem []byte) *Datareader {
+func CreateDataReaderFromMemory(mem []byte) *DataReader {
 	p := unsafe.Pointer(&mem[0])
 	pp := usf.Malloc(1, 8)
 	usf.Push(pp, p)
@@ -523,24 +522,221 @@ func CreateDatareaderFromMemory(mem []byte) *Datareader {
 	d := call("ncnn_datareader_create_from_memory", ffi.Pointer,
 		[]ffi.Type{ffi.Pointer},
 		[]interface{}{&pp})
-	return &Datareader{c: usf.Pop(d)}
+	return &DataReader{c: usf.Pop(d)}
 }
-func (d *Datareader) Destroy() {
+func (d *DataReader) Destroy() {
 	call("ncnn_datareader_destroy", ffi.Void,
 		[]ffi.Type{ffi.Pointer},
 		[]interface{}{&d.c})
 }
 
-type _custom_layer_factory struct {
-	creator   unsafe.Pointer
-	destroyer unsafe.Pointer
-	userdata  unsafe.Pointer
-	next      unsafe.Pointer
+type ModelBin struct{ c unsafe.Pointer }
+
+func CreateModelBinFromDataReader(dr *DataReader) *ModelBin {
+	m := call("ncnn_modelbin_create_from_datareader", ffi.Pointer,
+		[]ffi.Type{ffi.Pointer},
+		[]interface{}{&dr.c})
+	return &ModelBin{c: usf.Pop(m)}
 }
-type _net struct {
-	this                 unsafe.Pointer
-	custom_layer_factory unsafe.Pointer
+func CreateModelBinFromMatArray(mats []*Mat) *ModelBin {
+	l := uint32(len(mats))
+	ms := usf.Malloc(uint64(l), 8)
+	defer usf.Free(ms)
+	m := call("ncnn_modelbin_create_from_mat_array", ffi.Pointer,
+		[]ffi.Type{ffi.Pointer, ffi.Int32},
+		[]interface{}{&ms, &l})
+	return &ModelBin{c: usf.Pop(m)}
 }
+func (mb *ModelBin) Destroy() {
+	call("ncnn_modelbin_destroy", ffi.Void,
+		[]ffi.Type{ffi.Pointer},
+		[]interface{}{&mb.c})
+}
+
+type Layer struct{ c unsafe.Pointer }
+
+func CreateLayer() *Layer {
+	l := call("ncnn_layer_create", ffi.Pointer, []ffi.Type{}, []interface{}{})
+	return &Layer{c: usf.Pop(l)}
+}
+func CreateLayerByTypeindex(typIdx int32) *Layer {
+	l := call("ncnn_layer_create_by_typeindex", ffi.Pointer,
+		[]ffi.Type{ffi.Int32},
+		[]interface{}{&typIdx})
+	return &Layer{c: usf.Pop(l)}
+}
+func CreateLayerByType(typ string) *Layer {
+	t, p := cstr(typ)
+	defer usf.Free(p)
+	l := call("ncnn_layer_create_by_typeindex", ffi.Pointer,
+		[]ffi.Type{ffi.Pointer},
+		[]interface{}{&t})
+	return &Layer{c: usf.Pop(l)}
+}
+func (l *Layer) Destroy() {
+	call("ncnn_layer_destroy", ffi.Void,
+		[]ffi.Type{ffi.Pointer},
+		[]interface{}{&l.c})
+}
+func (l *Layer) GetName() string {
+	n := call("ncnn_layer_get_name", ffi.Pointer,
+		[]ffi.Type{ffi.Pointer},
+		[]interface{}{&l.c})
+	return gostr(usf.Pop(n))
+}
+func (l *Layer) GetTypeIndex() int32 {
+	n := call("ncnn_layer_get_typeindex", ffi.Int32,
+		[]ffi.Type{ffi.Pointer},
+		[]interface{}{&l.c})
+	return (*(*[1]int32)(n))[0]
+}
+func (l *Layer) GetType() string {
+	n := call("ncnn_layer_get_type", ffi.Pointer,
+		[]ffi.Type{ffi.Pointer},
+		[]interface{}{&l.c})
+	return gostr(usf.Pop(n))
+}
+
+func (l *Layer) GetOneBlobOnly() bool {
+	n := call("ncnn_layer_get_one_blob_only", ffi.Int32,
+		[]ffi.Type{ffi.Pointer},
+		[]interface{}{&l.c})
+	return (*(*[1]int32)(n))[0] == 1
+}
+func (l *Layer) GetSupportInplace() bool {
+	n := call("ncnn_layer_get_support_inplace", ffi.Int32,
+		[]ffi.Type{ffi.Pointer},
+		[]interface{}{&l.c})
+	return (*(*[1]int32)(n))[0] == 1
+}
+func (l *Layer) GetSupportVulkan() bool {
+	n := call("ncnn_layer_get_support_vulkan", ffi.Int32,
+		[]ffi.Type{ffi.Pointer},
+		[]interface{}{&l.c})
+	return (*(*[1]int32)(n))[0] == 1
+}
+func (l *Layer) GetSupportPacking() bool {
+	n := call("ncnn_layer_get_support_packing", ffi.Int32,
+		[]ffi.Type{ffi.Pointer},
+		[]interface{}{&l.c})
+	return (*(*[1]int32)(n))[0] == 1
+}
+func (l *Layer) GetSupportBf16Storage() bool {
+	n := call("ncnn_layer_get_support_bf16_storage", ffi.Int32,
+		[]ffi.Type{ffi.Pointer},
+		[]interface{}{&l.c})
+	return (*(*[1]int32)(n))[0] == 1
+}
+func (l *Layer) GetSupportFp16Storage() bool {
+	n := call("ncnn_layer_get_support_fp16_storage", ffi.Int32,
+		[]ffi.Type{ffi.Pointer},
+		[]interface{}{&l.c})
+	return (*(*[1]int32)(n))[0] == 1
+}
+func (l *Layer) GetSupportImageStorage() bool {
+	n := call("ncnn_layer_get_support_image_storage", ffi.Int32,
+		[]ffi.Type{ffi.Pointer},
+		[]interface{}{&l.c})
+	return (*(*[1]int32)(n))[0] == 1
+}
+
+func (l *Layer) SetOneBlobOnly(enable bool) {
+	b := cbool(enable)
+	call("ncnn_layer_set_one_blob_only", ffi.Void,
+		[]ffi.Type{ffi.Pointer, ffi.Int32},
+		[]interface{}{&l.c, &b})
+}
+func (l *Layer) SetSupportInplace(enable bool) {
+	b := cbool(enable)
+	call("ncnn_layer_set_support_inplace", ffi.Void,
+		[]ffi.Type{ffi.Pointer, ffi.Int32},
+		[]interface{}{&l.c, &b})
+}
+func (l *Layer) SetSupportVulkan(enable bool) {
+	b := cbool(enable)
+	call("ncnn_layer_set_support_vulkan", ffi.Void,
+		[]ffi.Type{ffi.Pointer, ffi.Int32},
+		[]interface{}{&l.c, &b})
+}
+func (l *Layer) SetSupportPacking(enable bool) {
+	b := cbool(enable)
+	call("ncnn_layer_set_support_packing", ffi.Void,
+		[]ffi.Type{ffi.Pointer, ffi.Int32},
+		[]interface{}{&l.c, &b})
+}
+func (l *Layer) SetSupportBf16Storage(enable bool) {
+	b := cbool(enable)
+	call("ncnn_layer_set_support_bf16_storage", ffi.Void,
+		[]ffi.Type{ffi.Pointer, ffi.Int32},
+		[]interface{}{&l.c, &b})
+}
+func (l *Layer) SetSupportFp16Storage(enable bool) {
+	b := cbool(enable)
+	call("ncnn_layer_set_support_fp16_storage", ffi.Void,
+		[]ffi.Type{ffi.Pointer, ffi.Int32},
+		[]interface{}{&l.c, &b})
+}
+func (l *Layer) SetSupportImageStorage(enable bool) {
+	b := cbool(enable)
+	call("ncnn_layer_set_support_image_storage", ffi.Void,
+		[]ffi.Type{ffi.Pointer, ffi.Int32},
+		[]interface{}{&l.c, &b})
+}
+func (l *Layer) GetBottomCount() int32 {
+	n := call("ncnn_layer_get_bottom_count", ffi.Int32,
+		[]ffi.Type{ffi.Pointer},
+		[]interface{}{&l.c})
+	return (*(*[1]int32)(n))[0]
+}
+func (l *Layer) GetBottom(i int32) int32 {
+	n := call("ncnn_layer_get_bottom_count", ffi.Int32,
+		[]ffi.Type{ffi.Pointer, ffi.Int32},
+		[]interface{}{&l.c, &i})
+	return (*(*[1]int32)(n))[0]
+}
+func (l *Layer) GetTopCount() int32 {
+	n := call("ncnn_layer_get_top_count", ffi.Int32,
+		[]ffi.Type{ffi.Pointer},
+		[]interface{}{&l.c})
+	return (*(*[1]int32)(n))[0]
+}
+func (l *Layer) GetTop(i int32) int32 {
+	n := call("ncnn_layer_get_top", ffi.Int32,
+		[]ffi.Type{ffi.Pointer, ffi.Int32},
+		[]interface{}{&l.c, &i})
+	return (*(*[1]int32)(n))[0]
+}
+func (l *Layer) GetBottomShape(i int32) (dims int32, w int32, h int32, c int32) {
+	dims = int32(0)
+	w = int32(1)
+	h = int32(1)
+	c = int32(1)
+
+	_dims := &dims
+	_w := &w
+	_h := &h
+	_c := &c
+	call("ncnn_blob_get_bottom_shape", ffi.Void,
+		[]ffi.Type{ffi.Pointer, ffi.Int32},
+		[]interface{}{&l.c, &i, &_dims, &_w, &_h, &_c})
+	return
+}
+func (l *Layer) GetTopShape(i int32) (dims int32, w int32, h int32, c int32) {
+	dims = int32(0)
+	w = int32(1)
+	h = int32(1)
+	c = int32(1)
+
+	_dims := &dims
+	_w := &w
+	_h := &h
+	_c := &c
+	call("ncnn_blob_get_top_shape", ffi.Void,
+		[]ffi.Type{ffi.Pointer, ffi.Int32},
+		[]interface{}{&l.c, &i, &_dims, &_w, &_h, &_c})
+	return
+}
+
 type Net struct{ c unsafe.Pointer }
 
 func CreateNet() *Net {
@@ -562,6 +758,37 @@ func (net *Net) SetOption(opt *Option) {
 	call("ncnn_net_set_option", ffi.Void,
 		[]ffi.Type{ffi.Pointer, ffi.Pointer},
 		[]interface{}{&net.c, &opt.c})
+}
+
+// 不知道怎么使用
+func (net *Net) RegisterCustomLayerByType(typ string, creator func() *Layer, destroyer func(*Layer)) {
+	t, p := cstr(typ)
+	defer usf.Free(p)
+	creat := ffi.NewClosure(ffi.ClosureConf{
+		Abi:    ffi.AbiDefault,
+		Output: ffi.Pointer,
+		Inputs: []ffi.Type{},
+	}, func(cp *ffi.ClosureParams) {
+		l := creator()
+		usf.Push(cp.Return, l.c)
+	}, []interface{}{})
+
+	dest := ffi.NewClosure(ffi.ClosureConf{
+		Abi:    ffi.AbiDefault,
+		Output: ffi.Void,
+		Inputs: []ffi.Type{ffi.Pointer, ffi.Pointer},
+	}, func(cp *ffi.ClosureParams) {
+		l := usf.Pop(cp.Args[0])
+		destroyer(&Layer{c: l})
+	}, []interface{}{})
+
+	c := creat.Cfn()
+	d := dest.Cfn()
+	a := usf.MallocOf(1, 8)
+	usf.Memset(a, 0, 8)
+	call("ncnn_net_register_custom_layer_by_type", ffi.Void,
+		[]ffi.Type{ffi.Pointer, ffi.Pointer, ffi.Pointer, ffi.Pointer, ffi.Pointer},
+		[]interface{}{&net.c, &t, &c, &d, &a})
 }
 func (net *Net) LoadParam(path string) int32 {
 	c, p := cstr(path)
