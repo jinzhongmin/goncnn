@@ -13,9 +13,9 @@ import (
 
 var dll *dlfcn.Handle
 
-func Loadlib(dllPath string) {
+func Loadlib(dllPath string, mod dlfcn.Mode) {
 	var err error
-	dll, err = dlfcn.DlOpen(dllPath, dlfcn.RTLDGlobal)
+	dll, err = dlfcn.DlOpen(dllPath, mod)
 	if err != nil {
 		panic(err)
 	}
