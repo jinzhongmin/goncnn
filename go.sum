@@ -10,8 +10,8 @@ github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/hashicorp/hcl v1.0.0/go.mod h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T20WEQ=
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
-github.com/jinzhongmin/dlfcn v0.0.0-20230315064324-20911d8f19c6 h1:DE6I0zqQJm7CYmF5Vb4o8UoSdkukUuBzVy/XpQg1CXw=
-github.com/jinzhongmin/dlfcn v0.0.0-20230315064324-20911d8f19c6/go.mod h1:LKZTl0lyFVqu8rLhETZU6MB3Vtpzkowtcy3NA5RbcyM=
+github.com/jinzhongmin/dlfcn v0.0.0-20230320064349-c21ff9310ade h1:HsLyaKlPdTIfMeuI29VKjOrkIMS51p6DEvlk4JI5CmM=
+github.com/jinzhongmin/dlfcn v0.0.0-20230320064349-c21ff9310ade/go.mod h1:LKZTl0lyFVqu8rLhETZU6MB3Vtpzkowtcy3NA5RbcyM=
 github.com/jinzhongmin/goffi v0.0.0-20230315063028-0a5689597283 h1:Cr3CLF2cgujHpWmLBYM+b4RK8AtrldIHhyK2b0NVBvU=
 github.com/jinzhongmin/goffi v0.0.0-20230315063028-0a5689597283/go.mod h1:32mvu39m3gFg5O87ddVN2rC5Ti9BUOeaquUgFB6gcxE=
 github.com/jinzhongmin/usf v0.0.0-20230320062830-91195fedb649 h1:Z6SV1JHuvjuRA67FtjIGgNH6fvr4LwYlYwqxTanuUK4=
