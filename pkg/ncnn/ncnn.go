@@ -34,13 +34,13 @@ func cstr(s string) (*C.char, unsafe.Pointer) {
 func gostr(p unsafe.Pointer) string {
 	return C.GoString((*C.char)(p))
 }
-func call(fn string, inTyp ffi.Type, outTyp []ffi.Type, args []interface{}) unsafe.Pointer {
+func call(fn string, outTyp ffi.Type, inTyp []ffi.Type, args []interface{}) unsafe.Pointer {
 	fnp, err := dll.Symbol(fn)
 	if err != nil {
 		panic(err)
 	}
 
-	cif, err := ffi.NewCif(ffi.AbiDefault, inTyp, outTyp)
+	cif, err := ffi.NewCif(ffi.AbiDefault, outTyp, inTyp)
 	if err != nil {
 		panic(err)
 	}
