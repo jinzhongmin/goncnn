@@ -27,9 +27,9 @@ func cbool(b bool) C.int {
 	}
 	return 0
 }
-func cstr(s string) (*C.char, unsafe.Pointer) {
+func cstr(s string) unsafe.Pointer {
 	p := C.CString(s)
-	return p, unsafe.Pointer(p)
+	return unsafe.Pointer(p)
 }
 func gostr(p unsafe.Pointer) string {
 	return C.GoString((*C.char)(p))
@@ -553,7 +553,36 @@ func (mb *ModelBin) Destroy() {
 		[]interface{}{&mb.c})
 }
 
-type Layer struct{ c unsafe.Pointer }
+type Layer struct {
+	c          unsafe.Pointer
+	load_param *ffi.Closure
+	load_model *ffi.Closure
+
+	create_pipeline  *ffi.Closure
+	destroy_pipeline *ffi.Closure
+
+	forward_1 *ffi.Closure
+	forward_n *ffi.Closure
+
+	forward_inplace_1 *ffi.Closure
+	forward_inplace_n *ffi.Closure
+}
+
+type _c_layer struct {
+	this unsafe.Pointer
+
+	load_param unsafe.Pointer
+	load_model unsafe.Pointer
+
+	create_pipeline  unsafe.Pointer
+	destroy_pipeline unsafe.Pointer
+
+	forward_1 unsafe.Pointer
+	forward_n unsafe.Pointer
+
+	forward_inplace_1 unsafe.Pointer
+	forward_inplace_n unsafe.Pointer
+}
 
 func CreateLayer() *Layer {
 	l := call("ncnn_layer_create", ffi.Pointer, []ffi.Type{}, []interface{}{})
@@ -566,12 +595,168 @@ func CreateLayerByTypeindex(typIdx int32) *Layer {
 	return &Layer{c: usf.Pop(l)}
 }
 func CreateLayerByType(typ string) *Layer {
-	t, p := cstr(typ)
-	defer usf.Free(p)
+	t := cstr(typ)
+	defer usf.Free(t)
 	l := call("ncnn_layer_create_by_typeindex", ffi.Pointer,
 		[]ffi.Type{ffi.Pointer},
 		[]interface{}{&t})
 	return &Layer{c: usf.Pop(l)}
+}
+func (l *Layer) SetLoadParam(fn func(l *Layer, pd *Paramdict) int32) {
+	cls := ffi.NewClosure(ffi.ClosureConf{
+		Abi:    ffi.AbiDefault,
+		Output: ffi.Int32,
+		Inputs: []ffi.Type{ffi.Pointer, ffi.Pointer},
+	}, func(cp *ffi.ClosureParams) {
+		lc := (*[1]unsafe.Pointer)(cp.Args[0])[0]
+		pc := (*[1]unsafe.Pointer)(cp.Args[1])[0]
+
+		r := fn(&Layer{c: lc}, &Paramdict{c: pc})
+		(*(*[1]int32)(cp.Return))[0] = r
+	}, []interface{}{})
+
+	((*_c_layer)(l.c)).load_param = cls.Cfn()
+	l.load_param = cls
+}
+func (l *Layer) SetLoadModel(fn func(l *Layer, mb *ModelBin) int32) {
+	cls := ffi.NewClosure(ffi.ClosureConf{
+		Abi:    ffi.AbiDefault,
+		Output: ffi.Int32,
+		Inputs: []ffi.Type{ffi.Pointer, ffi.Pointer},
+	}, func(cp *ffi.ClosureParams) {
+		lc := (*[1]unsafe.Pointer)(cp.Args[0])[0]
+		mc := (*[1]unsafe.Pointer)(cp.Args[1])[0]
+
+		r := fn(&Layer{c: lc}, &ModelBin{c: mc})
+		(*(*[1]int32)(cp.Return))[0] = r
+	}, []interface{}{})
+
+	((*_c_layer)(l.c)).load_model = cls.Cfn()
+	l.load_model = cls
+}
+func (l *Layer) SetCreatePipeline(fn func(l *Layer, opt *Option) int32) {
+	cls := ffi.NewClosure(ffi.ClosureConf{
+		Abi:    ffi.AbiDefault,
+		Output: ffi.Int32,
+		Inputs: []ffi.Type{ffi.Pointer, ffi.Pointer},
+	}, func(cp *ffi.ClosureParams) {
+		lc := (*[1]unsafe.Pointer)(cp.Args[0])[0]
+		oc := (*[1]unsafe.Pointer)(cp.Args[1])[0]
+
+		r := fn(&Layer{c: lc}, &Option{c: oc})
+		(*(*[1]int32)(cp.Return))[0] = r
+	}, []interface{}{})
+
+	((*_c_layer)(l.c)).create_pipeline = cls.Cfn()
+	l.create_pipeline = cls
+}
+func (l *Layer) SetDestroyPipeline(fn func(l *Layer, opt *Option) int32) {
+	cls := ffi.NewClosure(ffi.ClosureConf{
+		Abi:    ffi.AbiDefault,
+		Output: ffi.Int32,
+		Inputs: []ffi.Type{ffi.Pointer, ffi.Pointer},
+	}, func(cp *ffi.ClosureParams) {
+		lc := (*[1]unsafe.Pointer)(cp.Args[0])[0]
+		oc := (*[1]unsafe.Pointer)(cp.Args[1])[0]
+
+		r := fn(&Layer{c: lc}, &Option{c: oc})
+		(*(*[1]int32)(cp.Return))[0] = r
+	}, []interface{}{})
+
+	((*_c_layer)(l.c)).destroy_pipeline = cls.Cfn()
+	l.destroy_pipeline = cls
+}
+func (l *Layer) SetForward1(fn func(l *Layer, bottomBlob *Mat, topBlob *Mat, opt *Option) int32) {
+	cls := ffi.NewClosure(ffi.ClosureConf{
+		Abi:    ffi.AbiDefault,
+		Output: ffi.Int32,
+		Inputs: []ffi.Type{ffi.Pointer, ffi.Pointer, ffi.Pointer, ffi.Pointer},
+	}, func(cp *ffi.ClosureParams) {
+		lc := (*[1]unsafe.Pointer)(cp.Args[0])[0]
+		bbc := (*[1]unsafe.Pointer)(cp.Args[1])[0]
+		tbc := (*[1]unsafe.Pointer)(cp.Args[2])[0]
+		tbc = usf.Pop(tbc)
+		oc := (*[1]unsafe.Pointer)(cp.Args[3])[0]
+
+		r := fn(&Layer{c: lc}, &Mat{c: bbc}, &Mat{c: tbc}, &Option{c: oc})
+		(*(*[1]int32)(cp.Return))[0] = r
+	}, []interface{}{})
+
+	((*_c_layer)(l.c)).forward_1 = cls.Cfn()
+	l.forward_1 = cls
+}
+func (l *Layer) SetForwardN(fn func(l *Layer, bottomBlob []*Mat, topBlob []*Mat, opt *Option) int32) {
+	cls := ffi.NewClosure(ffi.ClosureConf{
+		Abi:    ffi.AbiDefault,
+		Output: ffi.Int32,
+		Inputs: []ffi.Type{ffi.Pointer, ffi.Pointer, ffi.Int32, ffi.Pointer, ffi.Int32, ffi.Pointer},
+	}, func(cp *ffi.ClosureParams) {
+		lc := (*[1]unsafe.Pointer)(cp.Args[0])[0]
+		bp := (*[1]unsafe.Pointer)(cp.Args[1])[0]
+		bn := (*[1]int32)(cp.Args[2])[0]
+		tp := (*[1]unsafe.Pointer)(cp.Args[3])[0]
+		tn := (*[1]int32)(cp.Args[4])[0]
+		oc := (*[1]unsafe.Pointer)(cp.Args[5])[0]
+
+		bbgo := make([]*Mat, 0)
+		bs := *(*[]unsafe.Pointer)(usf.Slice(bp, uint64(bn)))
+		for i := range bs {
+			bbgo = append(bbgo, &Mat{c: bs[i]})
+		}
+
+		ttgo := make([]*Mat, 0)
+		ts := *(*[]unsafe.Pointer)(usf.Slice(tp, uint64(tn)))
+		for i := range ts {
+			ttgo = append(ttgo, &Mat{c: ts[i]})
+		}
+
+		r := fn(&Layer{c: lc}, bbgo, ttgo, &Option{c: oc})
+		(*(*[1]int32)(cp.Return))[0] = r
+	}, []interface{}{})
+
+	((*_c_layer)(l.c)).forward_n = cls.Cfn()
+	l.forward_n = cls
+}
+func (l *Layer) SetForwardInplace1(fn func(l *Layer, bottomTopBlob *Blob, opt *Option) int32) {
+	cls := ffi.NewClosure(ffi.ClosureConf{
+		Abi:    ffi.AbiDefault,
+		Output: ffi.Int32,
+		Inputs: []ffi.Type{ffi.Pointer, ffi.Pointer, ffi.Pointer},
+	}, func(cp *ffi.ClosureParams) {
+		lc := (*[1]unsafe.Pointer)(cp.Args[0])[0]
+		btb := (*[1]unsafe.Pointer)(cp.Args[1])[0]
+		oc := (*[1]unsafe.Pointer)(cp.Args[2])[0]
+
+		r := fn(&Layer{c: lc}, &Blob{c: btb}, &Option{c: oc})
+		(*(*[1]int32)(cp.Return))[0] = r
+	}, []interface{}{})
+
+	((*_c_layer)(l.c)).forward_inplace_1 = cls.Cfn()
+	l.forward_inplace_1 = cls
+}
+func (l *Layer) SetForwardInplaceN(fn func(l *Layer, bottomTopBlob []*Blob, opt *Option) int32) {
+	cls := ffi.NewClosure(ffi.ClosureConf{
+		Abi:    ffi.AbiDefault,
+		Output: ffi.Int32,
+		Inputs: []ffi.Type{ffi.Pointer, ffi.Pointer, ffi.Int32, ffi.Pointer},
+	}, func(cp *ffi.ClosureParams) {
+		lc := (*[1]unsafe.Pointer)(cp.Args[0])[0]
+		btb := (*[1]unsafe.Pointer)(cp.Args[1])[0]
+		btbn := (*[1]int32)(cp.Args[2])[0]
+		oc := (*[1]unsafe.Pointer)(cp.Args[3])[0]
+
+		btbgo := make([]*Blob, 0)
+		btbs := *(*[]unsafe.Pointer)(usf.Slice(btb, uint64(btbn)))
+		for i := range btbs {
+			btbgo = append(btbgo, &Blob{c: btbs[i]})
+		}
+
+		r := fn(&Layer{c: lc}, btbgo, &Option{c: oc})
+		(*(*[1]int32)(cp.Return))[0] = r
+	}, []interface{}{})
+
+	((*_c_layer)(l.c)).forward_inplace_n = cls.Cfn()
+	l.forward_inplace_n = cls
 }
 func (l *Layer) Destroy() {
 	call("ncnn_layer_destroy", ffi.Void,
@@ -737,7 +922,29 @@ func (l *Layer) GetTopShape(i int32) (dims int32, w int32, h int32, c int32) {
 	return
 }
 
-type Net struct{ c unsafe.Pointer }
+type _net_custom_layer struct {
+	name      unsafe.Pointer
+	creator   *ffi.Closure
+	destroyer *ffi.Closure
+}
+
+func (l *_net_custom_layer) free() {
+	if l.name != nil {
+		usf.Free(l.name)
+	}
+	if l.creator != nil {
+		l.creator.Free()
+		return
+	}
+	if l.destroyer != nil {
+		l.destroyer.Free()
+	}
+}
+
+type Net struct {
+	c             unsafe.Pointer
+	_custom_layer []*_net_custom_layer
+}
 
 func CreateNet() *Net {
 	n := call("ncnn_net_create", ffi.Pointer, []ffi.Type{}, []interface{}{})
@@ -747,6 +954,9 @@ func (net *Net) Destroy() {
 	call("ncnn_net_destroy", ffi.Void,
 		[]ffi.Type{ffi.Pointer},
 		[]interface{}{&net.c})
+	for i := range net._custom_layer {
+		net._custom_layer[i].free()
+	}
 }
 func (net *Net) GetOption() *Option {
 	o := call("ncnn_net_get_option", ffi.Pointer,
@@ -759,18 +969,16 @@ func (net *Net) SetOption(opt *Option) {
 		[]ffi.Type{ffi.Pointer, ffi.Pointer},
 		[]interface{}{&net.c, &opt.c})
 }
-
-// 不知道怎么使用
 func (net *Net) RegisterCustomLayerByType(typ string, creator func() *Layer, destroyer func(*Layer)) {
-	t, p := cstr(typ)
-	defer usf.Free(p)
+	t := cstr(typ)
+
 	creat := ffi.NewClosure(ffi.ClosureConf{
 		Abi:    ffi.AbiDefault,
 		Output: ffi.Pointer,
-		Inputs: []ffi.Type{},
+		Inputs: []ffi.Type{ffi.Pointer},
 	}, func(cp *ffi.ClosureParams) {
 		l := creator()
-		usf.Push(cp.Return, l.c)
+		(*(*[1]unsafe.Pointer)(cp.Return))[0] = l.c
 	}, []interface{}{})
 
 	dest := ffi.NewClosure(ffi.ClosureConf{
@@ -786,29 +994,66 @@ func (net *Net) RegisterCustomLayerByType(typ string, creator func() *Layer, des
 	d := dest.Cfn()
 	a := usf.MallocOf(1, 8)
 	usf.Memset(a, 0, 8)
+
 	call("ncnn_net_register_custom_layer_by_type", ffi.Void,
 		[]ffi.Type{ffi.Pointer, ffi.Pointer, ffi.Pointer, ffi.Pointer, ffi.Pointer},
-		[]interface{}{&net.c, &t, &c, &d, &a})
+		[]interface{}{&net.c, &t, &c, &d, a})
+	net._custom_layer = append(net._custom_layer, &_net_custom_layer{
+		name:      t,
+		creator:   creat,
+		destroyer: dest,
+	})
+}
+func (net *Net) RegisterCustomLayerByTypeIndex(typIdx int32, creator func() *Layer, destroyer func(*Layer)) {
+	creat := ffi.NewClosure(ffi.ClosureConf{
+		Abi:    ffi.AbiDefault,
+		Output: ffi.Pointer,
+		Inputs: []ffi.Type{ffi.Pointer},
+	}, func(cp *ffi.ClosureParams) {
+		l := creator()
+		(*(*[1]unsafe.Pointer)(cp.Return))[0] = l.c
+	}, []interface{}{})
+
+	dest := ffi.NewClosure(ffi.ClosureConf{
+		Abi:    ffi.AbiDefault,
+		Output: ffi.Void,
+		Inputs: []ffi.Type{ffi.Pointer, ffi.Pointer},
+	}, func(cp *ffi.ClosureParams) {
+		l := usf.Pop(cp.Args[0])
+		destroyer(&Layer{c: l})
+	}, []interface{}{})
+
+	c := creat.Cfn()
+	d := dest.Cfn()
+	a := usf.MallocOf(1, 8)
+	usf.Memset(a, 0, 8)
+	call("ncnn_net_register_custom_layer_by_typeindex", ffi.Void,
+		[]ffi.Type{ffi.Pointer, ffi.Int32, ffi.Pointer, ffi.Pointer, ffi.Pointer},
+		[]interface{}{&net.c, &typIdx, &c, &d, &a})
+	net._custom_layer = append(net._custom_layer, &_net_custom_layer{
+		creator:   creat,
+		destroyer: dest,
+	})
 }
 func (net *Net) LoadParam(path string) int32 {
-	c, p := cstr(path)
-	defer usf.Free(p)
+	c := cstr(path)
+	defer usf.Free(c)
 	n := call("ncnn_net_load_param", ffi.Int32,
 		[]ffi.Type{ffi.Pointer, ffi.Pointer},
 		[]interface{}{&net.c, &c})
 	return (*(*[1]int32)(n))[0]
 }
 func (net *Net) LoadParamBin(path string) int32 {
-	c, p := cstr(path)
-	defer usf.Free(p)
+	c := cstr(path)
+	defer usf.Free(c)
 	n := call("ncnn_net_load_param_bin", ffi.Int32,
 		[]ffi.Type{ffi.Pointer, ffi.Pointer},
 		[]interface{}{&net.c, &c})
 	return (*(*[1]int32)(n))[0]
 }
 func (net *Net) LoadModel(path string) int32 {
-	c, p := cstr(path)
-	defer usf.Free(p)
+	c := cstr(path)
+	defer usf.Free(c)
 	n := call("ncnn_net_load_model", ffi.Int32,
 		[]ffi.Type{ffi.Pointer, ffi.Pointer},
 		[]interface{}{&net.c, &c})
@@ -884,8 +1129,8 @@ func (ex *Extractor) SetOption(opt *Option) {
 		[]interface{}{&ex.c, &opt.c})
 }
 func (ex *Extractor) Input(name string, mat *Mat) int32 {
-	m, p := cstr(name)
-	defer usf.Free(p)
+	m := cstr(name)
+	defer usf.Free(m)
 	i := call("ncnn_extractor_input", ffi.Int32,
 		[]ffi.Type{ffi.Pointer, ffi.Pointer, ffi.Pointer},
 		[]interface{}{&ex.c, &m, &mat.c})
@@ -895,8 +1140,8 @@ func (ex *Extractor) Extract(name string) *Mat {
 	m := usf.Malloc(1, 8)
 	defer usf.Free(m)
 
-	n, p := cstr(name)
-	defer usf.Free(p)
+	n := cstr(name)
+	defer usf.Free(n)
 
 	call("ncnn_extractor_extract", ffi.Int32,
 		[]ffi.Type{ffi.Pointer, ffi.Pointer, ffi.Pointer},
