@@ -6,7 +6,7 @@ require (
 	github.com/anthonynsimon/bild v0.13.0
 	github.com/jinzhongmin/dlfcn v0.0.0-20230315064324-20911d8f19c6
 	github.com/jinzhongmin/goffi v0.0.0-20230315063028-0a5689597283
-	github.com/jinzhongmin/usf v0.0.0-20230317143107-618b59614b9f
+	github.com/jinzhongmin/usf v0.0.0-20230320062830-91195fedb649
 )
 
 require (
