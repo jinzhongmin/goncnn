@@ -1149,7 +1149,6 @@ func (ex *Extractor) Extract(name string) *Mat {
 	return &Mat{c: usf.Pop(m)}
 }
 
-// 不知道怎么使用
 func (ex *Extractor) InputIndex(idx int32, mat *Mat) int32 {
 	i := call("ncnn_extractor_input_index", ffi.Int32,
 		[]ffi.Type{ffi.Pointer, ffi.Int32, ffi.Pointer},
@@ -1157,7 +1156,6 @@ func (ex *Extractor) InputIndex(idx int32, mat *Mat) int32 {
 	return (*(*[1]int32)(i))[0]
 }
 
-// 不知道怎么使用
 func (ex *Extractor) ExtractIndex(idx int32) *Mat {
 	m := usf.Malloc(1, 8)
 	defer usf.Free(m)
