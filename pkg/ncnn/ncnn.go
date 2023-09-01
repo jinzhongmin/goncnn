@@ -374,7 +374,7 @@ func (l *Layer) SetLoadParam(fn func(l *Layer, pd *Paramdict) int32) {
 				ret.SetI32(r)
 			}
 		}
-		((*_c_layer)(l.c)).load_param = cls.Cfunc
+		((*_c_layer)(l.c)).load_param = cls.FuncPtr()
 		l.load_param = cls
 	}
 	l.load_param.CallbackFunc = fn
@@ -391,7 +391,7 @@ func (l *Layer) SetLoadModel(fn func(l *Layer, mb *ModelBin) int32) {
 				ret.SetI32(r)
 			}
 		}
-		((*_c_layer)(l.c)).load_model = cls.Cfunc
+		((*_c_layer)(l.c)).load_model = cls.FuncPtr()
 		l.load_model = cls
 	}
 	l.load_model.CallbackFunc = fn
@@ -408,7 +408,7 @@ func (l *Layer) SetCreatePipeline(fn func(l *Layer, opt *Option) int32) {
 				ret.SetI32(r)
 			}
 		}
-		((*_c_layer)(l.c)).create_pipeline = cls.Cfunc
+		((*_c_layer)(l.c)).create_pipeline = cls.FuncPtr()
 		l.create_pipeline = cls
 	}
 	l.create_pipeline.CallbackFunc = fn
@@ -424,7 +424,7 @@ func (l *Layer) SetDestroyPipeline(fn func(l *Layer, opt *Option) int32) {
 				ret.SetI32(r)
 			}
 		}
-		((*_c_layer)(l.c)).destroy_pipeline = cls.Cfunc
+		((*_c_layer)(l.c)).destroy_pipeline = cls.FuncPtr()
 		l.destroy_pipeline = cls
 	}
 	l.destroy_pipeline.CallbackFunc = fn
@@ -441,7 +441,7 @@ func (l *Layer) SetForward1(fn func(l *Layer, bottomBlob *Mat, topBlob *Mat, opt
 				ret.SetI32(r)
 			}
 		}
-		((*_c_layer)(l.c)).forward_1 = cls.Cfunc
+		((*_c_layer)(l.c)).forward_1 = cls.FuncPtr()
 		l.forward_1 = cls
 	}
 	l.forward_1.CallbackFunc = fn
@@ -469,7 +469,7 @@ func (l *Layer) SetForwardN(fn func(l *Layer, bottomBlob []*Mat, topBlob []*Mat,
 				ret.SetI32(r)
 			}
 		}
-		((*_c_layer)(l.c)).forward_n = cls.Cfunc
+		((*_c_layer)(l.c)).forward_n = cls.FuncPtr()
 		l.forward_n = cls
 	}
 	l.forward_n.CallbackFunc = fn
@@ -485,7 +485,7 @@ func (l *Layer) SetForwardInplace1(fn func(l *Layer, bottomTopBlob *Blob, opt *O
 				ret.SetI32(r)
 			}
 		}
-		((*_c_layer)(l.c)).forward_inplace_1 = cls.Cfunc
+		((*_c_layer)(l.c)).forward_inplace_1 = cls.FuncPtr()
 		l.forward_inplace_1 = cls
 	}
 	l.forward_inplace_1.CallbackFunc = fn
@@ -506,7 +506,7 @@ func (l *Layer) SetForwardInplaceN(fn func(l *Layer, bottomTopBlob []*Blob, opt 
 				ret.SetI32(r)
 			}
 		}
-		((*_c_layer)(l.c)).forward_inplace_n = cls.Cfunc
+		((*_c_layer)(l.c)).forward_inplace_n = cls.FuncPtr()
 		l.forward_inplace_n = cls
 	}
 	l.forward_inplace_n.CallbackFunc = fn
@@ -670,7 +670,7 @@ func (net *Net) RegisterCustomLayerByType(typ string, creator func() *Layer, des
 				fn(&Layer{c: args[0].Ptr()})
 			}
 		}
-		cc, d, a := create.Cfunc, dest.Cfunc, usf.Malloc(8)
+		cc, d, a := create.FuncPtr(), dest.FuncPtr(), usf.Malloc(8)
 		usf.Memset(a, 0, 8)
 		ncl := &_net_custom_layer{
 			name:      t,
@@ -705,7 +705,7 @@ func (net *Net) RegisterCustomLayerByTypeIndex(typIdx int32, creator func() *Lay
 				fn((&Layer{c: args[0].Ptr()}))
 			}
 		}
-		cc, d, a := create.Cfunc, dest.Cfunc, usf.Malloc(8)
+		cc, d, a := create.FuncPtr(), dest.FuncPtr(), usf.Malloc(8)
 		usf.Memset(a, 0, 8)
 		ncnnLib.Call(_func_ncnn_net_register_custom_layer_by_typeindex_, []interface{}{&net.c, &typIdx, &cc, &d, &a})
 		usf.Memset(a, 0, 8)
