@@ -104,7 +104,7 @@ func CreateMatExternal3D(w, h, ch int32, data interface{}, alc *Allocator) *Mat 
 }
 func CreateMatExternal4D(w, h, d, ch int32, data interface{}, alc *Allocator) *Mat {
 	dt := usf.AddrOf(data)
-	return &Mat{c: ncnnLib.Call(_func_ncnn_mat_create_external_4d_, []interface{}{&w, &h, &dt, &ch, &dt, &alc.c}).PtrFree()}
+	return &Mat{c: ncnnLib.Call(_func_ncnn_mat_create_external_4d_, []interface{}{&w, &h, &d, &ch, &dt, &alc.c}).PtrFree()}
 }
 func CreateMat1DElm(w int32, elmSize uint64, elmPack int32, alc *Allocator) *Mat {
 	return &Mat{c: ncnnLib.Call(_func_ncnn_mat_create_1d_elem_, []interface{}{&w, &elmSize, &elmPack, &alc.c}).PtrFree()}
@@ -362,154 +362,155 @@ func CreateLayerByType(typ string) *Layer {
 	defer usf.Free(t)
 	return &Layer{c: ncnnLib.Call(_func_ncnn_layer_create_by_type_, []interface{}{&t}).PtrFree()}
 }
+
+var loadParamCallbackPrototype = c.DefineCallbackPrototype(c.AbiDefault, c.I32, []c.Type{c.Pointer, c.Pointer})
+
 func (l *Layer) SetLoadParam(fn func(l *Layer, pd *Paramdict) int32) {
-	if l.load_param == nil {
-		cls := c.NewCallback(c.AbiDefault, c.I32, []c.Type{c.Pointer, c.Pointer})
-		cls.CallbackCvt = func(cb *c.Callback, args []*c.Value, ret *c.Value) {
-			fn, ok := cb.CallbackFunc.(func(l *Layer, pd *Paramdict) int32)
-			if ok {
-				lc := args[0].Ptr()
-				pc := args[1].Ptr()
-				r := fn(&Layer{c: lc}, &Paramdict{c: pc})
-				ret.SetI32(r)
-			}
-		}
-		((*_c_layer)(l.c)).load_param = cls.FuncPtr()
-		l.load_param = cls
+	if l.load_param != nil {
+		l.load_param.Free()
 	}
-	l.load_param.CallbackFunc = fn
+
+	cls := loadParamCallbackPrototype.CreateCallback(func(args []*c.Value, ret *c.Value) {
+		lc := args[0].Ptr()
+		pc := args[1].Ptr()
+		r := fn(&Layer{c: lc}, &Paramdict{c: pc})
+		ret.SetI32(r)
+	})
+	((*_c_layer)(l.c)).load_param = cls.CFuncPtr()
+	l.load_param = cls
 }
+
+var loadModelCallbackPrototype = c.DefineCallbackPrototype(c.AbiDefault, c.I32, []c.Type{c.Pointer, c.Pointer})
+
 func (l *Layer) SetLoadModel(fn func(l *Layer, mb *ModelBin) int32) {
-	if l.load_model == nil {
-		cls := c.NewCallback(c.AbiDefault, c.I32, []c.Type{c.Pointer, c.Pointer})
-		cls.CallbackCvt = func(cb *c.Callback, args []*c.Value, ret *c.Value) {
-			fn, ok := cb.CallbackFunc.(func(l *Layer, mb *ModelBin) int32)
-			if ok {
-				lc := args[0].Ptr()
-				mc := args[1].Ptr()
-				r := fn(&Layer{c: lc}, &ModelBin{c: mc})
-				ret.SetI32(r)
-			}
-		}
-		((*_c_layer)(l.c)).load_model = cls.FuncPtr()
-		l.load_model = cls
+	if l.load_model != nil {
+		l.load_model.Free()
 	}
-	l.load_model.CallbackFunc = fn
+
+	cls := loadModelCallbackPrototype.CreateCallback(func(args []*c.Value, ret *c.Value) {
+		lc := args[0].Ptr()
+		mc := args[1].Ptr()
+		r := fn(&Layer{c: lc}, &ModelBin{c: mc})
+		ret.SetI32(r)
+	})
+	((*_c_layer)(l.c)).load_model = cls.CFuncPtr()
+	l.load_model = cls
 }
+
+var createPipelineCallbackPrototype = c.DefineCallbackPrototype(c.AbiDefault, c.I32, []c.Type{c.Pointer, c.Pointer})
+
 func (l *Layer) SetCreatePipeline(fn func(l *Layer, opt *Option) int32) {
-	if l.create_pipeline == nil {
-		cls := c.NewCallback(c.AbiDefault, c.I32, []c.Type{c.Pointer, c.Pointer})
-		cls.CallbackCvt = func(cb *c.Callback, args []*c.Value, ret *c.Value) {
-			fn, ok := cb.CallbackFunc.(func(l *Layer, opt *Option) int32)
-			if ok {
-				lc := args[0].Ptr()
-				oc := args[1].Ptr()
-				r := fn(&Layer{c: lc}, &Option{c: oc})
-				ret.SetI32(r)
-			}
-		}
-		((*_c_layer)(l.c)).create_pipeline = cls.FuncPtr()
-		l.create_pipeline = cls
+	if l.create_pipeline != nil {
+		l.create_pipeline.Free()
 	}
-	l.create_pipeline.CallbackFunc = fn
+
+	cls := createPipelineCallbackPrototype.CreateCallback(func(args []*c.Value, ret *c.Value) {
+		lc := args[0].Ptr()
+		oc := args[1].Ptr()
+		r := fn(&Layer{c: lc}, &Option{c: oc})
+		ret.SetI32(r)
+	})
+	((*_c_layer)(l.c)).create_pipeline = cls.CFuncPtr()
+	l.create_pipeline = cls
 }
+
+var destroyPipelineCallbackPrototype = c.DefineCallbackPrototype(c.AbiDefault, c.I32, []c.Type{c.Pointer, c.Pointer})
+
 func (l *Layer) SetDestroyPipeline(fn func(l *Layer, opt *Option) int32) {
-	if l.destroy_pipeline == nil {
-		cls := c.NewCallback(c.AbiDefault, c.I32, []c.Type{c.Pointer, c.Pointer})
-		cls.CallbackCvt = func(cb *c.Callback, args []*c.Value, ret *c.Value) {
-			fn, ok := cb.CallbackFunc.(func(l *Layer, opt *Option) int32)
-			if ok {
-				lc, oc := args[0].Ptr(), args[1].Ptr()
-				r := fn(&Layer{c: lc}, &Option{c: oc})
-				ret.SetI32(r)
-			}
-		}
-		((*_c_layer)(l.c)).destroy_pipeline = cls.FuncPtr()
-		l.destroy_pipeline = cls
+	if l.destroy_pipeline != nil {
+		l.destroy_pipeline.Free()
 	}
-	l.destroy_pipeline.CallbackFunc = fn
+
+	cls := destroyPipelineCallbackPrototype.CreateCallback(func(args []*c.Value, ret *c.Value) {
+		lc, oc := args[0].Ptr(), args[1].Ptr()
+		r := fn(&Layer{c: lc}, &Option{c: oc})
+		ret.SetI32(r)
+	})
+	((*_c_layer)(l.c)).destroy_pipeline = cls.CFuncPtr()
+	l.destroy_pipeline = cls
 }
+
+var forward1CallbackPrototype = c.DefineCallbackPrototype(c.AbiDefault, c.I32, []c.Type{c.Pointer, c.Pointer, c.Pointer, c.Pointer})
+
 func (l *Layer) SetForward1(fn func(l *Layer, bottomBlob *Mat, topBlob *Mat, opt *Option) int32) {
-	if l.forward_1 == nil {
-		cls := c.NewCallback(c.AbiDefault, c.I32, []c.Type{c.Pointer, c.Pointer, c.Pointer, c.Pointer})
-		cls.CallbackCvt = func(cb *c.Callback, args []*c.Value, ret *c.Value) {
-			fn, ok := cb.CallbackFunc.(func(l *Layer, bottomBlob *Mat, topBlob *Mat, opt *Option) int32)
-			if ok {
-				lc, bbc, tbc, oc := args[0].Ptr(), args[1].Ptr(), args[2].Ptr(), args[3].Ptr()
-				tbc = usf.Pop(tbc)
-				r := fn(&Layer{c: lc}, &Mat{c: bbc}, &Mat{c: tbc}, &Option{c: oc})
-				ret.SetI32(r)
-			}
-		}
-		((*_c_layer)(l.c)).forward_1 = cls.FuncPtr()
-		l.forward_1 = cls
+	if l.forward_1 != nil {
+		l.forward_1.Free()
 	}
-	l.forward_1.CallbackFunc = fn
+
+	cls := forward1CallbackPrototype.CreateCallback(func(args []*c.Value, ret *c.Value) {
+		lc, bbc, tbc, oc := args[0].Ptr(), args[1].Ptr(), args[2].Ptr(), args[3].Ptr()
+		tbc = usf.Pop(tbc)
+		r := fn(&Layer{c: lc}, &Mat{c: bbc}, &Mat{c: tbc}, &Option{c: oc})
+		ret.SetI32(r)
+	})
+	((*_c_layer)(l.c)).forward_1 = cls.CFuncPtr()
+	l.forward_1 = cls
+
 }
+
+var forwardNCallbackPrototype = c.DefineCallbackPrototype(c.AbiDefault, c.I32, []c.Type{c.Pointer, c.Pointer, c.I32, c.Pointer, c.I32, c.Pointer})
+
 func (l *Layer) SetForwardN(fn func(l *Layer, bottomBlob []*Mat, topBlob []*Mat, opt *Option) int32) {
-	if l.forward_n == nil {
-		cls := c.NewCallback(c.AbiDefault, c.I32, []c.Type{c.Pointer, c.Pointer, c.I32, c.Pointer, c.I32, c.Pointer})
-		cls.CallbackCvt = func(cb *c.Callback, args []*c.Value, ret *c.Value) {
-			fn, ok := cb.CallbackFunc.(func(l *Layer, bottomBlob []*Mat, topBlob []*Mat, opt *Option) int32)
-			if ok {
-				lc, oc := args[0].Ptr(), args[5].Ptr()
-				bp, bn := args[1].Ptr(), args[2].I32()
-				tp, tn := args[3].Ptr(), args[4].I32()
-				bbgo := make([]*Mat, 0)
-				bs := *(*[]unsafe.Pointer)(usf.Slice(bp, uint64(bn)))
-				for i := range bs {
-					bbgo = append(bbgo, &Mat{c: bs[i]})
-				}
-				ttgo := make([]*Mat, 0)
-				ts := *(*[]unsafe.Pointer)(usf.Slice(tp, uint64(tn)))
-				for i := range ts {
-					ttgo = append(ttgo, &Mat{c: ts[i]})
-				}
-				r := fn(&Layer{c: lc}, bbgo, ttgo, &Option{c: oc})
-				ret.SetI32(r)
-			}
-		}
-		((*_c_layer)(l.c)).forward_n = cls.FuncPtr()
-		l.forward_n = cls
+	if l.forward_n != nil {
+		l.forward_n.Free()
 	}
-	l.forward_n.CallbackFunc = fn
+
+	cls := forwardNCallbackPrototype.CreateCallback(func(args []*c.Value, ret *c.Value) {
+		lc, oc := args[0].Ptr(), args[5].Ptr()
+		bp, bn := args[1].Ptr(), args[2].I32()
+		tp, tn := args[3].Ptr(), args[4].I32()
+		bbgo := make([]*Mat, 0)
+		bs := *(*[]unsafe.Pointer)(usf.Slice(bp, uint64(bn)))
+		for i := range bs {
+			bbgo = append(bbgo, &Mat{c: bs[i]})
+		}
+		ttgo := make([]*Mat, 0)
+		ts := *(*[]unsafe.Pointer)(usf.Slice(tp, uint64(tn)))
+		for i := range ts {
+			ttgo = append(ttgo, &Mat{c: ts[i]})
+		}
+		r := fn(&Layer{c: lc}, bbgo, ttgo, &Option{c: oc})
+		ret.SetI32(r)
+	})
+	((*_c_layer)(l.c)).forward_n = cls.CFuncPtr()
+	l.forward_n = cls
 }
+
+var forwardInplace1CallbackPrototype = c.DefineCallbackPrototype(c.AbiDefault, c.I32, []c.Type{c.Pointer, c.Pointer, c.Pointer})
+
 func (l *Layer) SetForwardInplace1(fn func(l *Layer, bottomTopBlob *Blob, opt *Option) int32) {
-	if l.forward_inplace_1 == nil {
-		cls := c.NewCallback(c.AbiDefault, c.I32, []c.Type{c.Pointer, c.Pointer, c.Pointer})
-		cls.CallbackCvt = func(cb *c.Callback, args []*c.Value, ret *c.Value) {
-			fn, ok := cb.CallbackFunc.(func(l *Layer, bottomTopBlob *Blob, opt *Option) int32)
-			if ok {
-				lc, btb, oc := args[0].Ptr(), args[1].Ptr(), args[2].Ptr()
-				r := fn(&Layer{c: lc}, &Blob{c: btb}, &Option{c: oc})
-				ret.SetI32(r)
-			}
-		}
-		((*_c_layer)(l.c)).forward_inplace_1 = cls.FuncPtr()
-		l.forward_inplace_1 = cls
+	if l.forward_inplace_1 != nil {
+		l.forward_inplace_1.Free()
 	}
-	l.forward_inplace_1.CallbackFunc = fn
+
+	cls := forwardInplace1CallbackPrototype.CreateCallback(func(args []*c.Value, ret *c.Value) {
+		lc, btb, oc := args[0].Ptr(), args[1].Ptr(), args[2].Ptr()
+		r := fn(&Layer{c: lc}, &Blob{c: btb}, &Option{c: oc})
+		ret.SetI32(r)
+	})
+	((*_c_layer)(l.c)).forward_inplace_1 = cls.CFuncPtr()
+	l.forward_inplace_1 = cls
 }
+
+var forwardInplaceNCallbackPrototype = c.DefineCallbackPrototype(c.AbiDefault, c.I32, []c.Type{c.Pointer, c.Pointer, c.I32, c.Pointer})
+
 func (l *Layer) SetForwardInplaceN(fn func(l *Layer, bottomTopBlob []*Blob, opt *Option) int32) {
-	if l.forward_inplace_n == nil {
-		cls := c.NewCallback(c.AbiDefault, c.I32, []c.Type{c.Pointer, c.Pointer, c.I32, c.Pointer})
-		cls.CallbackCvt = func(cb *c.Callback, args []*c.Value, ret *c.Value) {
-			fn, ok := cb.CallbackFunc.(func(l *Layer, bottomTopBlob []*Blob, opt *Option) int32)
-			if ok {
-				lc, btb, btbn, oc := args[0].Ptr(), args[1].Ptr(), args[2].I32(), args[2].Ptr()
-				btbgo := make([]*Blob, 0)
-				btbs := *(*[]unsafe.Pointer)(usf.Slice(btb, uint64(btbn)))
-				for i := range btbs {
-					btbgo = append(btbgo, &Blob{c: btbs[i]})
-				}
-				r := fn(&Layer{c: lc}, btbgo, &Option{c: oc})
-				ret.SetI32(r)
-			}
-		}
-		((*_c_layer)(l.c)).forward_inplace_n = cls.FuncPtr()
-		l.forward_inplace_n = cls
+	if l.forward_inplace_n != nil {
+		l.forward_inplace_n.Free()
 	}
-	l.forward_inplace_n.CallbackFunc = fn
+
+	cls := forwardInplaceNCallbackPrototype.CreateCallback(func(args []*c.Value, ret *c.Value) {
+		lc, btb, btbn, oc := args[0].Ptr(), args[1].Ptr(), args[2].I32(), args[2].Ptr()
+		btbgo := make([]*Blob, 0)
+		btbs := *(*[]unsafe.Pointer)(usf.Slice(btb, uint64(btbn)))
+		for i := range btbs {
+			btbgo = append(btbgo, &Blob{c: btbs[i]})
+		}
+		r := fn(&Layer{c: lc}, btbgo, &Option{c: oc})
+		ret.SetI32(r)
+	})
+	((*_c_layer)(l.c)).forward_inplace_n = cls.CFuncPtr()
+	l.forward_inplace_n = cls
 }
 func (l *Layer) Destroy() {
 	ncnnLib.Call(_func_ncnn_layer_destroy_, []interface{}{&l.c})
@@ -612,14 +613,10 @@ func (l *_net_custom_layer) free() {
 		usf.Free(l.name)
 	}
 	if l.creator != nil {
-		l.creator.CallbackFunc = nil
-		l.creator.CallbackCvt = nil
 		l.creator.Free()
 		return
 	}
 	if l.destroyer != nil {
-		l.destroyer.CallbackFunc = nil
-		l.destroyer.CallbackCvt = nil
 		l.destroyer.Free()
 	}
 }
@@ -648,78 +645,74 @@ func (net *Net) GetOption() *Option {
 func (net *Net) SetOption(opt *Option) {
 	ncnnLib.Call(_func_ncnn_net_set_option_, []interface{}{&net.c, &opt.c})
 }
+
+var creatorCallbackPrototype = c.DefineCallbackPrototype(c.AbiDefault, c.Pointer, []c.Type{c.Pointer})
+var destroyerCallbackPrototype = c.DefineCallbackPrototype(c.AbiDefault, c.Void, []c.Type{c.Pointer, c.Pointer})
+
 func (net *Net) RegisterCustomLayerByType(typ string, creator func() *Layer, destroyer func(*Layer)) {
 	if net._custom_layer == nil {
 		net._custom_layer = make(map[string]*_net_custom_layer)
 	}
+
 	_, ok := net._custom_layer[typ]
-	if !ok {
-		t := c.CStr(typ)
-		create := c.NewCallback(c.AbiDefault, c.Pointer, []c.Type{c.Pointer})
-		create.CallbackCvt = func(cb *c.Callback, args []*c.Value, ret *c.Value) {
-			fn, ok := cb.CallbackFunc.(func() *Layer)
-			if ok {
-				l := fn()
-				ret.SetPtr(l.c)
-			}
-		}
-		dest := c.NewCallback(c.AbiDefault, c.Void, []c.Type{c.Pointer, c.Pointer})
-		dest.CallbackCvt = func(cb *c.Callback, args []*c.Value, ret *c.Value) {
-			fn, ok := cb.CallbackFunc.(func(*Layer))
-			if ok {
-				fn(&Layer{c: args[0].Ptr()})
-			}
-		}
-		cc, d, a := create.FuncPtr(), dest.FuncPtr(), usf.Malloc(8)
-		usf.Memset(a, 0, 8)
-		ncl := &_net_custom_layer{
-			name:      t,
-			creator:   create,
-			destroyer: dest,
-			data:      a,
-		}
-		net._custom_layer[typ] = ncl
-		ncnnLib.Call(_func_ncnn_net_register_custom_layer_by_type_, []interface{}{&net.c, &t, &cc, &d, a})
+	if ok {
+		net._custom_layer[typ].free()
 	}
-	net._custom_layer[typ].creator.CallbackFunc = creator
-	net._custom_layer[typ].destroyer.CallbackFunc = destroyer
+	t := c.CStr(typ)
+	create := creatorCallbackPrototype.CreateCallback(func(args []*c.Value, ret *c.Value) {
+		l := creator()
+		ret.SetPtr(l.c)
+	})
+
+	dest := destroyerCallbackPrototype.CreateCallback(func(args []*c.Value, ret *c.Value) {
+		destroyer(&Layer{c: args[0].Ptr()})
+	})
+
+	cc, d, a := create.CFuncPtr(), dest.CFuncPtr(), usf.Malloc(8)
+	usf.Memset(a, 0, 8)
+	ncl := &_net_custom_layer{
+		name:      t,
+		creator:   create,
+		destroyer: dest,
+		data:      a,
+	}
+	net._custom_layer[typ] = ncl
+	ncnnLib.Call(_func_ncnn_net_register_custom_layer_by_type_, []interface{}{&net.c, &t, &cc, &d, a})
+	net._custom_layer[typ].creator = create
+	net._custom_layer[typ].destroyer = dest
 }
 func (net *Net) RegisterCustomLayerByTypeIndex(typIdx int32, creator func() *Layer, destroyer func(*Layer)) {
 	if net._custom_layer_idx == nil {
 		net._custom_layer_idx = make(map[int32]*_net_custom_layer)
 	}
 	_, ok := net._custom_layer_idx[typIdx]
-	if !ok {
-		create := c.NewCallback(c.AbiDefault, c.Pointer, []c.Type{c.Pointer})
-		create.CallbackCvt = func(cb *c.Callback, args []*c.Value, ret *c.Value) {
-			fn, ok := cb.CallbackFunc.(func() *Layer)
-			if ok {
-				l := fn()
-				ret.SetPtr(l.c)
-			}
-		}
-		dest := c.NewCallback(c.AbiDefault, c.Void, []c.Type{c.Pointer, c.Pointer})
-		dest.CallbackCvt = func(cb *c.Callback, args []*c.Value, ret *c.Value) {
-			fn, ok := cb.CallbackFunc.(func(*Layer))
-			if ok {
-				fn((&Layer{c: args[0].Ptr()}))
-			}
-		}
-		cc, d, a := create.FuncPtr(), dest.FuncPtr(), usf.Malloc(8)
-		usf.Memset(a, 0, 8)
-		ncnnLib.Call(_func_ncnn_net_register_custom_layer_by_typeindex_, []interface{}{&net.c, &typIdx, &cc, &d, &a})
-		usf.Memset(a, 0, 8)
-		ncl := &_net_custom_layer{
-			name:      nil,
-			creator:   create,
-			destroyer: dest,
-			data:      a,
-		}
-		net._custom_layer_idx[typIdx] = ncl
-		ncnnLib.Call(_func_ncnn_net_register_custom_layer_by_typeindex_, []interface{}{&net.c, &typIdx, &cc, &d, &a})
+	if ok {
+		net._custom_layer_idx[typIdx].free()
 	}
-	net._custom_layer_idx[typIdx].creator.CallbackFunc = creator
-	net._custom_layer_idx[typIdx].destroyer.CallbackFunc = destroyer
+
+	create := creatorCallbackPrototype.CreateCallback(func(args []*c.Value, ret *c.Value) {
+		l := creator()
+		ret.SetPtr(l.c)
+	})
+
+	dest := destroyerCallbackPrototype.CreateCallback(func(args []*c.Value, ret *c.Value) {
+		destroyer(&Layer{c: args[0].Ptr()})
+	})
+
+	cc, d, a := create.CFuncPtr(), dest.CFuncPtr(), usf.Malloc(8)
+	usf.Memset(a, 0, 8)
+	ncnnLib.Call(_func_ncnn_net_register_custom_layer_by_typeindex_, []interface{}{&net.c, &typIdx, &cc, &d, &a})
+	usf.Memset(a, 0, 8)
+	ncl := &_net_custom_layer{
+		name:      nil,
+		creator:   create,
+		destroyer: dest,
+		data:      a,
+	}
+	net._custom_layer_idx[typIdx] = ncl
+	ncnnLib.Call(_func_ncnn_net_register_custom_layer_by_typeindex_, []interface{}{&net.c, &typIdx, &cc, &d, &a})
+	net._custom_layer_idx[typIdx].creator = create
+	net._custom_layer_idx[typIdx].destroyer = dest
 }
 func (net *Net) LoadParam(path string) int32 {
 	p := c.CStr(path)
